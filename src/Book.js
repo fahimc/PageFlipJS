@@ -1,6 +1,7 @@
 var Book = {
 	pages : [],
 	canvas : null,
+	context : null,
 	holder : null,
 	pageHolder : null,
 	currentIndex : 0,
@@ -14,9 +15,9 @@ var Book = {
 	},
 	drag : {
 		side : "",
-		index:0
+		index : 0
 	},
-	toRemove:null,
+	toRemove : null,
 	init : function() {
 		this.getPages();
 		this.setBook();
@@ -35,7 +36,7 @@ var Book = {
 
 		//set book size
 		this.holder.style.width = (this.CANVAS_WIDTH * 2) + "px";
-		this.holder.style.border = "1px solid #e4e4e4";
+		//this.holder.style.border = "1px solid #e4e4e4";
 
 		for (var a = 0; a < this.holder.childNodes.length; a++) {
 			var pageContainer;
@@ -63,9 +64,11 @@ var Book = {
 		this.canvas = document.createElement("canvas");
 		if (window.G_vmlCanvasManager)
 			G_vmlCanvasManager.initElement(this.canvas);
+		this.context  = this.canvas.getContext( '2d' );
 		this.canvas.style.width = (this.CANVAS_WIDTH * 2) + "px";
 		this.canvas.style.height = this.CANVAS_HEIGHT + "px";
 		this.canvas.style.position = "absolute";
+		this.canvas.style.top = "0";
 		this.holder.appendChild(this.canvas);
 	},
 	setPage : function(page, side, w) {
@@ -75,15 +78,15 @@ var Book = {
 		page.style.backgroundColor = "#fff";
 		page.style.top = "0px";
 		page.childNodes[0].style.left = "0px";
-		page.style.width = w!=undefined ? w : this.CANVAS_WIDTH + "px";
+		page.style.width = w != undefined ? w : this.CANVAS_WIDTH + "px";
 		page.style.left = (side == "LEFT" ? 0 : this.CANVAS_WIDTH) + "px";
 		this.pageHolder.appendChild(page);
 	},
 	removePage : function() {
-		if (!this.toRemove|| this.hasChild(this.toRemove))
+		if (!this.toRemove || this.hasChild(this.toRemove))
 			return;
 		this.pageHolder.removeChild(this.toRemove);
-		Book.toRemove =null;
+		Book.toRemove = null;
 	},
 	hasChild : function(page) {
 		for (var a = 0; a < this.pageHolder.childNodes.length; a++) {
@@ -109,9 +112,9 @@ var Book = {
 	onMouseMove : function(event) {
 		Book.mouse.x = Utensil.mouseX(Book.holder, event);
 		Book.mouse.y = Utensil.mouseY(Book.holder, event);
-		if(Book.mouse.x<0)Book.mouse.x=0;
-		
-		
+		if (Book.mouse.x < 0)
+			Book.mouse.x = 0;
+
 		if (Book.drag.side == "RIGHT") {
 			Book.movePageRight();
 		} else {
@@ -123,25 +126,27 @@ var Book = {
 		var w = (1 - (Book.mouse.x / (Book.CANVAS_WIDTH * 2))) * Book.CANVAS_WIDTH;
 		var cw = ((Book.mouse.x / (Book.CANVAS_WIDTH * 2))) * Book.CANVAS_WIDTH;
 		Book.pages[Book.drag.index].style.width = w + "px";
-		Book.pages[Book.drag.index].style.zIndex="3";
+		Book.pages[Book.drag.index].style.zIndex = "3";
 		Book.pages[Book.drag.index].style.left = Book.mouse.x + "px";
 		//set currentpage width
-		Book.pages[Book.drag.index-1].style.width = cw + "px";
-		
-		
+		Book.pages[Book.drag.index - 1].style.width = cw + "px";
+		Book.drawFlip();
 	},
 	movePageLeft : function() {
 		//set new page width and pos
-		if(Book.mouse.x>(Book.CANVAS_WIDTH ))Book.mouse.x=(Book.CANVAS_WIDTH );
+		if (Book.mouse.x > (Book.CANVAS_WIDTH ))
+			Book.mouse.x = (Book.CANVAS_WIDTH );
 		var w = ((Book.mouse.x / (Book.CANVAS_WIDTH ))) * Book.CANVAS_WIDTH;
-		var cw = Book.CANVAS_WIDTH -w;
+		var cw = Book.CANVAS_WIDTH - w;
 		Book.pages[Book.drag.index].style.width = w + "px";
-		Book.pages[Book.drag.index].style.zIndex="3";
+		Book.pages[Book.drag.index].style.zIndex = "3";
 		Book.pages[Book.drag.index].style.left = Book.mouse.x + "px";
 		//set currentpage width
-		Book.pages[Book.drag.index+1].style.width = cw + "px";
-		Book.pages[Book.drag.index+1].style.left = Book.mouse.x + "px";
+		Book.pages[Book.drag.index + 1].style.width = cw + "px";
+		Book.pages[Book.drag.index + 1].style.left = Book.mouse.x + "px";
 		Book.pages[Book.drag.index+1].childNodes[0].style.left = -Book.mouse.x + "px";
+		
+		
 	},
 	onMouseDown : function(event) {
 		Book.mouse.startX = Utensil.mouseX(Book.holder, event);
@@ -149,94 +154,122 @@ var Book = {
 		Book.mouse.x = Utensil.mouseX(Book.holder, event);
 		Book.mouse.y = Utensil.mouseY(Book.holder, event);
 		console.log(Book.currentIndex);
-			Book.drag.index = Book.currentIndex;
+		Book.drag.index = Book.currentIndex;
 		if (Book.mouse.startX > Book.CANVAS_WIDTH) {
-			Book.drag.index+=2;
-			if(Book.currentIndex==0)Book.drag.index=1;
+			Book.drag.index += 2;
+			if (Book.currentIndex == 0)
+				Book.drag.index = 1;
 			//page below
-			Book.setNextPage(Book.drag.index+1, "RIGHT");
+			Book.setNextPage(Book.drag.index + 1, "RIGHT");
 			//dragging page
 			Book.setDragPageRight();
 			Book.drag.side = "RIGHT";
 		} else {
-			if(Book.currentIndex==0)return;
+			if (Book.currentIndex == 0)
+				return;
 			Book.drag.index--;
 			//set bottom page
-			if(Book.currentIndex > 1)Book.setNextPage(Book.drag.index+1, "LEFT");
+			if (Book.currentIndex > 1)
+				Book.setNextPage(Book.drag.index + 1, "LEFT");
 			Book.setDragPageLeft();
 			Book.drag.side = "LEFT";
 		}
 		Utensil.addListener(document, "mousemove", Book.onMouseMove, false);
 		Utensil.addListener(document, "mouseup", Book.onMouseUp, false);
-		
+
 	},
 	setDragPageRight : function() {
 		//set the z-index
-		Book.pages[Book.drag.index-1].style.zIndex="2";
-		if(Book.pages[Book.drag.index +1])Book.pages[Book.drag.index +1].style.zIndex="1";
-		console.log("dragging Index",Book.drag.index);
-		Book.setNextPage(Book.drag.index, "RIGHT",0);
+		Book.pages[Book.drag.index - 1].style.zIndex = "2";
+		if (Book.pages[Book.drag.index + 1])
+			Book.pages[Book.drag.index + 1].style.zIndex = "1";
+		console.log("dragging Index", Book.drag.index);
+		Book.setNextPage(Book.drag.index, "RIGHT", 0);
 	},
 	setDragPageLeft : function() {
 		//Book.pages[Book.drag.index].style.zIndex="2";
-		Book.setNextPage(Book.drag.index, "LEFT",0);
+		Book.setNextPage(Book.drag.index, "LEFT", 0);
 	},
 	onMouseUp : function(event) {
 		Utensil.removeListener(document, "mousemove", Book.onMouseMove, false);
 		Utensil.removeListener(document, "mouseup", Book.onMouseUp, false);
-		console.log(Book.mouse.x,Book.mouse.startX );
-		if(Book.mouse.x==Book.mouse.startX )return;
+		console.log(Book.mouse.x, Book.mouse.startX);
+		if (Book.mouse.x == Book.mouse.startX)
+			return;
 		switch(Book.drag.side) {
 			case "LEFT":
-			
-			Book.animateLeftPage();
+
+				Book.animateLeftPage();
 				break;
 			case "RIGHT":
 				Book.animateRightPage();
-				
+
 				break;
 		}
-		
+
 	},
 	animateRightPage : function() {
 		if (Book.mouse.x > Book.CANVAS_WIDTH) {
 			Book.toRemove = Book.pages[Book.drag.index];
 			TweenLite.killTweensOf(Book.pages[Book.drag.index]);
-			TweenLite.killTweensOf(Book.pages[Book.drag.index-1]);
-			
-			TweenLite.to(Book.pages[Book.drag.index],1,{css:{left:(Book.CANVAS_WIDTH * 2)+"px",width:0+"px"},onComplete:Book.onRightComplete});
-			
-			TweenLite.to(Book.pages[Book.drag.index-1], 1, {
+			TweenLite.killTweensOf(Book.pages[Book.drag.index - 1]);
+
+			TweenLite.to(Book.pages[Book.drag.index], 1, {
+				css : {
+					left : (Book.CANVAS_WIDTH * 2) + "px",
+					width : 0 + "px"
+				},
+				onComplete : Book.onRightComplete
+			});
+
+			TweenLite.to(Book.pages[Book.drag.index - 1], 1, {
 				css : {
 					width : Book.CANVAS_WIDTH + "px"
 				}
 			});
 		} else {
-			Book.toRemove = Book.pages[Book.drag.index-1];
+			Book.toRemove = Book.pages[Book.drag.index - 1];
 			TweenLite.to(Book.pages[Book.drag.index], 1, {
 				css : {
 					left : 0 + "px",
 					width : Book.CANVAS_WIDTH + "px"
 				}
 			});
-			TweenLite.to(Book.pages[Book.drag.index-1], 1, {
+			TweenLite.to(Book.pages[Book.drag.index - 1], 1, {
 				css : {
 					width : 0 + "px"
 				},
 				onComplete : Book.onRightComplete
 			});
-			Book.currentIndex=Book.drag.index;
+			Book.currentIndex = Book.drag.index;
 		}
 	},
 	animateLeftPage : function() {
-		if (Book.mouse.x > Book.CANVAS_WIDTH *0.5) {
-			Book.toRemove = Book.pages[Book.drag.index+1]?Book.pages[Book.drag.index+1]:null;
-			
-			TweenLite.to(Book.pages[Book.drag.index],1,{css:{left:(Book.CANVAS_WIDTH )+"px",width:Book.CANVAS_WIDTH+"px"},onComplete:Book.onRightComplete});
-			if(Book.pages[Book.drag.index+1])TweenLite.to(Book.pages[Book.drag.index+1],1,{css:{left:(Book.CANVAS_WIDTH )+"px",width:0+"px"}});
-			Book.currentIndex=Book.drag.index-1;
-			
+		TweenLite.killTweensOf(Book.pages[Book.drag.index]);
+		if (Book.mouse.x > Book.CANVAS_WIDTH * 0.5) {
+			Book.toRemove = Book.pages[Book.drag.index + 1] ? Book.pages[Book.drag.index + 1] : null;
+
+			TweenLite.to(Book.pages[Book.drag.index], 1, {
+				css : {
+					left : (Book.CANVAS_WIDTH ) + "px",
+					width : Book.CANVAS_WIDTH + "px"
+				},
+				onComplete : Book.onRightComplete
+			});
+			if (Book.pages[Book.drag.index + 1]) {
+				TweenLite.killTweensOf(Book.pages[Book.drag.index + 1]);
+				TweenLite.to(Book.pages[Book.drag.index + 1], 1, {
+					css : {
+						left : (Book.CANVAS_WIDTH ) + "px",
+						width : 0 + "px"
+					}
+				});
+			}
+			Book.currentIndex = Book.drag.index - 1;
+
 		} else {
+			TweenLite.killTweensOf(Book.pages[Book.drag.index + 1]);
+			TweenLite.killTweensOf(Book.pages[Book.drag.index+1].childNodes[0]);
 			Book.toRemove = Book.pages[Book.drag.index];
 			TweenLite.to(Book.pages[Book.drag.index], 1, {
 				css : {
@@ -244,7 +277,7 @@ var Book = {
 					width : 0 + "px"
 				}
 			});
-			TweenLite.to(Book.pages[Book.drag.index+1], 1, {
+			TweenLite.to(Book.pages[Book.drag.index + 1], 1, {
 				css : {
 					left : 0 + "px",
 					width : Book.CANVAS_WIDTH + "px"
@@ -257,17 +290,103 @@ var Book = {
 					width : Book.CANVAS_WIDTH + "px"
 				}
 			});
-			
+
 		}
 	},
 	onRightComplete : function() {
 		Book.removePage();
 	},
-	setNextPage : function(index, side,w) {
-		if(!this.pages[index])return;
+	setNextPage : function(index, side, w) {
+		if (!this.pages[index])
+			return;
 		Book.setPage(this.pages[index], side, w);
 	},
-	render : function() {
+	drawFlip : function() {
+Book.canvas.style.zIndex="4";
+		// Strength of the fold is strongest in the middle of the book
+		var progress =((Book.mouse.x / (Book.CANVAS_WIDTH )));
+		console.log(progress);
+		var strength =  progress;
+
+		// Width of the folded paper
+		var foldWidth =((Book.mouse.x / (Book.CANVAS_WIDTH ))) * Book.CANVAS_WIDTH;
+
+		// X position of the folded paper
+		var foldX = Book.mouse.x ;
+
+		// How far the page should outdent vertically due to perspective
+		var verticalOutdent = 20 * strength;
+
+		// The maximum width of the left and right side shadows
+		var paperShadowWidth = (Book.CANVAS_WIDTH * 0.5 ) * Math.max(Math.min(1 - progress, 0.5), 0);
+		var rightShadowWidth = (Book.CANVAS_WIDTH * 0.5 ) * Math.max(Math.min(strength, 0.5), 0);
+		var leftShadowWidth = (Book.CANVAS_WIDTH * 0.5 ) * Math.max(Math.min(strength, 0.5), 0);
+
+		// Change page element width to match the x position of the fold
+		
+
+		Book.context.save();
+		Book.context.translate(0 + ((Book.CANVAS_WIDTH * 2) / 2 ), 0 + 0);
+
+		// Draw a sharp shadow on the left side of the page
+		Book.context.strokeStyle = 'rgba(0,0,0,' + (0.05 * strength) + ')';
+		Book.context.lineWidth = 30 * strength;
+		Book.context.beginPath();
+		Book.context.moveTo(foldX - foldWidth, -verticalOutdent * 0.5);
+		Book.context.lineTo(foldX - foldWidth, Book.CANVAS_HEIGHT + (verticalOutdent * 0.5));
+		Book.context.stroke();
+
+		// Right side drop shadow
+		var rightShadowGradient = Book.context.createLinearGradient(foldX, 0, foldX + rightShadowWidth, 0);
+		rightShadowGradient.addColorStop(0, 'rgba(0,0,0,' + (strength * 0.2) + ')');
+		rightShadowGradient.addColorStop(0.8, 'rgba(0,0,0,0.0)');
+
+		Book.context.fillStyle = rightShadowGradient;
+		Book.context.beginPath();
+		Book.context.moveTo(foldX, 0);
+		Book.context.lineTo(foldX + rightShadowWidth, 0);
+		Book.context.lineTo(foldX + rightShadowWidth, Book.CANVAS_HEIGHT);
+		Book.context.lineTo(foldX, Book.CANVAS_HEIGHT);
+		Book.context.fill();
+
+		// Left side drop shadow
+		var leftShadowGradient = Book.context.createLinearGradient(foldX - foldWidth - leftShadowWidth, 0, foldX - foldWidth, 0);
+		leftShadowGradient.addColorStop(0, 'rgba(0,0,0,0.0)');
+		leftShadowGradient.addColorStop(1, 'rgba(0,0,0,' + (strength * 0.15) + ')');
+
+		Book.context.fillStyle = leftShadowGradient;
+		Book.context.beginPath();
+		Book.context.moveTo(foldX - foldWidth - leftShadowWidth, 0);
+		Book.context.lineTo(foldX - foldWidth, 0);
+		Book.context.lineTo(foldX - foldWidth, Book.CANVAS_HEIGHT);
+		Book.context.lineTo(foldX - foldWidth - leftShadowWidth, Book.CANVAS_HEIGHT);
+		Book.context.fill();
+
+		// Gradient applied to the folded paper (highlights & shadows)
+		var foldGradient = Book.context.createLinearGradient(foldX - paperShadowWidth, 0, foldX, 0);
+		foldGradient.addColorStop(0.35, '#fafafa');
+		foldGradient.addColorStop(0.73, '#eeeeee');
+		foldGradient.addColorStop(0.9, '#fafafa');
+		foldGradient.addColorStop(1.0, '#e2e2e2');
+
+		Book.context.fillStyle = "#fff";
+		Book.context.strokeStyle = 'rgba(0,0,0,0.06)';
+		Book.context.lineWidth = 0.5;
+
+		// Draw the folded piece of paper
+		Book.context.beginPath();
+		Book.context.moveTo(foldX, 0);
+		Book.context.lineTo(foldX, Book.CANVAS_HEIGHT);
+		Book.context.quadraticCurveTo(foldX, Book.CANVAS_HEIGHT + (verticalOutdent * 2), foldX - foldWidth, Book.CANVAS_HEIGHT + verticalOutdent);
+		Book.context.lineTo(foldX - foldWidth, -verticalOutdent);
+		Book.context.quadraticCurveTo(foldX, -verticalOutdent * 2, foldX, 0);
+
+		Book.context.fill();
+		Book.context.stroke();
+
+		Book.context.restore();
+		
+		
 
 	},
 	isEven : function(value) {

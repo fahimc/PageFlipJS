@@ -162,7 +162,7 @@ var Book = {
 			if(Book.currentIndex==0)return;
 			Book.drag.index--;
 			//set bottom page
-			if(Book.currentIndex > 1)Book.setNextPage(Book.drag.index-1, "LEFT");
+			if(Book.currentIndex > 1)Book.setNextPage(Book.drag.index+1, "LEFT");
 			Book.setDragPageLeft();
 			Book.drag.side = "LEFT";
 		}
@@ -178,7 +178,7 @@ var Book = {
 		Book.setNextPage(Book.drag.index, "RIGHT",0);
 	},
 	setDragPageLeft : function() {
-		Book.pages[Book.drag.index].style.zIndex="2";
+		//Book.pages[Book.drag.index].style.zIndex="2";
 		Book.setNextPage(Book.drag.index, "LEFT",0);
 	},
 	onMouseUp : function(event) {
@@ -234,7 +234,7 @@ var Book = {
 			
 			TweenLite.to(Book.pages[Book.drag.index],1,{css:{left:(Book.CANVAS_WIDTH )+"px",width:Book.CANVAS_WIDTH+"px"},onComplete:Book.onRightComplete});
 			if(Book.pages[Book.drag.index+1])TweenLite.to(Book.pages[Book.drag.index+1],1,{css:{left:(Book.CANVAS_WIDTH )+"px",width:0+"px"}});
-			Book.currentIndex=Book.drag.index;
+			Book.currentIndex=Book.drag.index-1;
 			
 		} else {
 			Book.toRemove = Book.pages[Book.drag.index];

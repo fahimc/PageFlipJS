@@ -64,12 +64,14 @@ var Book = {
 		this.canvas = document.createElement("canvas");
 		if (window.G_vmlCanvasManager)
 			G_vmlCanvasManager.initElement(this.canvas);
-		this.context  = this.canvas.getContext( '2d' );
+		this.context = this.canvas.getContext('2d');
 		this.canvas.style.width = (this.CANVAS_WIDTH * 2) + "px";
-		this.canvas.style.height = this.CANVAS_HEIGHT + "px";
+		this.canvas.width = (this.CANVAS_WIDTH * 2) ;
+		this.canvas.style.height = (this.CANVAS_HEIGHT+40) + "px";
+		this.canvas.height = (this.CANVAS_HEIGHT+40) ;
 		this.canvas.style.position = "absolute";
-		this.canvas.style.top = "0";
-		this.holder.appendChild(this.canvas);
+		this.canvas.style.top = "-20px";
+		this.pageHolder.appendChild(this.canvas);
 	},
 	setPage : function(page, side, w) {
 		page.style.border = "1px solid #e4e4e4";
@@ -130,7 +132,7 @@ var Book = {
 		Book.pages[Book.drag.index].style.left = Book.mouse.x + "px";
 		//set currentpage width
 		Book.pages[Book.drag.index - 1].style.width = cw + "px";
-		Book.drawFlip();
+		Book.drawFlip(w/Book.CANVAS_WIDTH,w);
 	},
 	movePageLeft : function() {
 		//set new page width and pos
@@ -145,8 +147,7 @@ var Book = {
 		Book.pages[Book.drag.index + 1].style.width = cw + "px";
 		Book.pages[Book.drag.index + 1].style.left = Book.mouse.x + "px";
 		Book.pages[Book.drag.index+1].childNodes[0].style.left = -Book.mouse.x + "px";
-		
-		
+
 	},
 	onMouseDown : function(event) {
 		Book.mouse.startX = Utensil.mouseX(Book.holder, event);
@@ -183,7 +184,7 @@ var Book = {
 		Book.pages[Book.drag.index - 1].style.zIndex = "2";
 		if (Book.pages[Book.drag.index + 1])
 			Book.pages[Book.drag.index + 1].style.zIndex = "1";
-		console.log("dragging Index", Book.drag.index);
+		
 		Book.setNextPage(Book.drag.index, "RIGHT", 0);
 	},
 	setDragPageLeft : function() {
@@ -301,54 +302,53 @@ var Book = {
 			return;
 		Book.setPage(this.pages[index], side, w);
 	},
-	drawFlip : function() {
-Book.canvas.style.zIndex="4";
+	drawFlip : function(progress,foldWidth) {
+		this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+		Book.canvas.style.zIndex = "2";
 		// Strength of the fold is strongest in the middle of the book
-		var progress =((Book.mouse.x / (Book.CANVAS_WIDTH )));
-		console.log(progress);
-		var strength =  progress;
-
-		// Width of the folded paper
-		var foldWidth =((Book.mouse.x / (Book.CANVAS_WIDTH ))) * Book.CANVAS_WIDTH;
+	
+		var strength = 1 - progress;
+		console.log("strength",strength);
 
 		// X position of the folded paper
-		var foldX = Book.mouse.x ;
+		var foldX = Book.mouse.x;
 
 		// How far the page should outdent vertically due to perspective
-		var verticalOutdent = 20 * strength;
-
-		// The maximum width of the left and right side shadows
+		var verticalOutdent = 5 * strength;
+console.log("verticalOutdent",verticalOutdent);
+		// // The maximum width of the left and right side shadows
 		var paperShadowWidth = (Book.CANVAS_WIDTH * 0.5 ) * Math.max(Math.min(1 - progress, 0.5), 0);
-		var rightShadowWidth = (Book.CANVAS_WIDTH * 0.5 ) * Math.max(Math.min(strength, 0.5), 0);
+	var rightShadowWidth = (Book.CANVAS_WIDTH * 0.5 ) * Math.max(Math.min(strength, 0.5), 0);
 		var leftShadowWidth = (Book.CANVAS_WIDTH * 0.5 ) * Math.max(Math.min(strength, 0.5), 0);
-
+console.log("paperShadowWidth",paperShadowWidth);
+console.log("rightShadowWidth",rightShadowWidth);
+console.log("leftShadowWidth",leftShadowWidth);
 		// Change page element width to match the x position of the fold
-		
 
-		Book.context.save();
-		Book.context.translate(0 + ((Book.CANVAS_WIDTH * 2) / 2 ), 0 + 0);
-
+		//Book.context.save();
+		//Book.context.translate(0 + ((Book.CANVAS_WIDTH * 2) / 2 ), 0 + 0);
+// 
 		// Draw a sharp shadow on the left side of the page
 		Book.context.strokeStyle = 'rgba(0,0,0,' + (0.05 * strength) + ')';
 		Book.context.lineWidth = 30 * strength;
 		Book.context.beginPath();
-		Book.context.moveTo(foldX - foldWidth, -verticalOutdent * 0.5);
-		Book.context.lineTo(foldX - foldWidth, Book.CANVAS_HEIGHT + (verticalOutdent * 0.5));
+		Book.context.moveTo(foldX, -verticalOutdent * 0.5);
+		Book.context.lineTo(foldX, Book.CANVAS_HEIGHT + (verticalOutdent * 0.5));
 		Book.context.stroke();
 
 		// Right side drop shadow
-		var rightShadowGradient = Book.context.createLinearGradient(foldX, 0, foldX + rightShadowWidth, 0);
+		var rightShadowGradient = Book.context.createLinearGradient(foldX+foldWidth, 0, foldX + rightShadowWidth, 0);
 		rightShadowGradient.addColorStop(0, 'rgba(0,0,0,' + (strength * 0.2) + ')');
 		rightShadowGradient.addColorStop(0.8, 'rgba(0,0,0,0.0)');
 
 		Book.context.fillStyle = rightShadowGradient;
 		Book.context.beginPath();
-		Book.context.moveTo(foldX, 0);
+		Book.context.moveTo(foldX+foldWidth, 0);
 		Book.context.lineTo(foldX + rightShadowWidth, 0);
 		Book.context.lineTo(foldX + rightShadowWidth, Book.CANVAS_HEIGHT);
-		Book.context.lineTo(foldX, Book.CANVAS_HEIGHT);
+		Book.context.lineTo(foldX+foldWidth, Book.CANVAS_HEIGHT);
 		Book.context.fill();
-
+// 
 		// Left side drop shadow
 		var leftShadowGradient = Book.context.createLinearGradient(foldX - foldWidth - leftShadowWidth, 0, foldX - foldWidth, 0);
 		leftShadowGradient.addColorStop(0, 'rgba(0,0,0,0.0)');
@@ -368,25 +368,23 @@ Book.canvas.style.zIndex="4";
 		foldGradient.addColorStop(0.73, '#eeeeee');
 		foldGradient.addColorStop(0.9, '#fafafa');
 		foldGradient.addColorStop(1.0, '#e2e2e2');
-
+// 
 		Book.context.fillStyle = "#fff";
 		Book.context.strokeStyle = 'rgba(0,0,0,0.06)';
 		Book.context.lineWidth = 0.5;
 
 		// Draw the folded piece of paper
 		Book.context.beginPath();
-		Book.context.moveTo(foldX, 0);
-		Book.context.lineTo(foldX, Book.CANVAS_HEIGHT);
-		Book.context.quadraticCurveTo(foldX, Book.CANVAS_HEIGHT + (verticalOutdent * 2), foldX - foldWidth, Book.CANVAS_HEIGHT + verticalOutdent);
-		Book.context.lineTo(foldX - foldWidth, -verticalOutdent);
-		Book.context.quadraticCurveTo(foldX, -verticalOutdent * 2, foldX, 0);
-
+		Book.context.moveTo( Book.mouse.x, 0);
+		Book.context.lineTo( Book.mouse.x, Book.CANVAS_HEIGHT);
+		Book.context.quadraticCurveTo( Book.mouse.x, Book.CANVAS_HEIGHT+ (verticalOutdent * 2), Book.mouse.x+foldWidth, Book.CANVAS_HEIGHT+ verticalOutdent );
+		Book.context.lineTo( Book.mouse.x+foldWidth, -verticalOutdent);
+		Book.context.quadraticCurveTo( Book.mouse.x, -verticalOutdent, Book.mouse.x, 0);
+		console.log(Book.mouse.x,Book.mouse.x+foldWidth);
 		Book.context.fill();
 		Book.context.stroke();
 
 		Book.context.restore();
-		
-		
 
 	},
 	isEven : function(value) {

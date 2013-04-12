@@ -215,13 +215,13 @@ var Book = {
 				Book.animateRightPage();
 				break;
 			case "RIGHT":
-				Book.animateRightPage();
+				Book.animateRightPage(true);
 
 				break;
 		}
 
 	},
-	animateRightPage : function() {
+	animateRightPage : function(right) {
 		if (Book.mouse.x > Book.CANVAS_WIDTH) {
 			Book.toRemove = Book.pages[Book.drag.index];
 			TweenLite.killTweensOf(Book.pages[Book.drag.index]);
@@ -240,6 +240,7 @@ var Book = {
 					width : Book.CANVAS_WIDTH + "px"
 				}
 			});
+			if(!right)Book.currentIndex = Book.drag.index - 1;
 		} else {
 			Book.toRemove = Book.pages[Book.drag.index - 1];
 			TweenLite.to(Book.pages[Book.drag.index], 1, {
@@ -254,7 +255,7 @@ var Book = {
 				},
 				onComplete : Book.onRightComplete
 			});
-			Book.currentIndex = Book.drag.index;
+			if(right)Book.currentIndex = Book.drag.index;
 		}
 		TweenLite.ticker.addEventListener("tick", Book.onTweenTicker);
 

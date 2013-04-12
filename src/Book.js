@@ -138,17 +138,23 @@ var Book = {
 	},
 	movePageLeft : function() {
 		//set new page width and pos
-		if (Book.mouse.x > (Book.CANVAS_WIDTH ))
-			Book.mouse.x = (Book.CANVAS_WIDTH );
-		var w = ((Book.mouse.x / (Book.CANVAS_WIDTH ))) * Book.CANVAS_WIDTH;
-		var cw = Book.CANVAS_WIDTH - w;
+		if (Book.mouse.x > (Book.CANVAS_WIDTH *2 ))
+			Book.mouse.x = (Book.CANVAS_WIDTH *2);
+		var w = (1-(Book.mouse.x / (Book.CANVAS_WIDTH *2))) * Book.CANVAS_WIDTH;
+		var cw = Book.mouse.x - Book.CANVAS_WIDTH;
 		Book.pages[Book.drag.index].style.width = w + "px";
 		Book.pages[Book.drag.index].style.zIndex = "3";
 		Book.pages[Book.drag.index].style.left = Book.mouse.x + "px";
 		//set currentpage width
-		Book.pages[Book.drag.index + 1].style.width = cw + "px";
-		Book.pages[Book.drag.index + 1].style.left = Book.mouse.x + "px";
-		Book.pages[Book.drag.index+1].childNodes[0].style.left = -Book.mouse.x + "px";
+		if(Book.pages[Book.drag.index - 1])
+		{
+			Book.pages[Book.drag.index-1].style.zIndex = "5";
+			Book.pages[Book.drag.index - 1].style.width = (cw>0?cw:0) + "px";
+			Book.pages[Book.drag.index - 1].style.left = Book.CANVAS_WIDTH + "px";
+			console.log(Book.pages[Book.drag.index - 1].style.left,cw);
+			//Book.pages[Book.drag.index- 1].childNodes[0].style.left = -Book.mouse.x + "px";
+		}
+		
 		Book.drawFlip(w / Book.CANVAS_WIDTH, w);
 	},
 	onMouseDown : function(event) {
@@ -173,10 +179,11 @@ var Book = {
 		} else {
 			if (Book.currentIndex == 0)
 				return;
-			Book.drag.index--;
+			//Book.drag.index--;
 			//set bottom page
 			if (Book.currentIndex > 1)
-				Book.setNextPage(Book.drag.index + 1, "LEFT");
+				Book.setNextPage(Book.drag.index -2, "LEFT");
+				Book.setNextPage(Book.drag.index -1, "RIGHT",0);
 			Book.setDragPageLeft();
 			Book.drag.side = "LEFT";
 		}
@@ -205,7 +212,7 @@ var Book = {
 		switch(Book.drag.side) {
 			case "LEFT":
 
-				Book.animateLeftPage();
+				Book.animateRightPage();
 				break;
 			case "RIGHT":
 				Book.animateRightPage();
@@ -256,16 +263,7 @@ var Book = {
 	{
 		if(!Book.hasChild(Book.pages[Book.drag.index]))return;
 		Book.mouse.x = Number(Book.pages[Book.drag.index].style.left.replace("px",""));
-		var w=0;
-		switch(Book.drag.side)
-		{
-			case "LEFT":
-			w = ((Book.mouse.x / (Book.CANVAS_WIDTH ))) * Book.CANVAS_WIDTH;
-			break;
-			case "RIGHT":
-			w = (1 - (Book.mouse.x / (Book.CANVAS_WIDTH * 2))) * Book.CANVAS_WIDTH;
-			break;
-		}
+		var w = (1 - (Book.mouse.x / (Book.CANVAS_WIDTH * 2))) * Book.CANVAS_WIDTH;
 		Book.drawFlip(w / Book.CANVAS_WIDTH, w);
 	},
 	animateLeftPage : function() {
@@ -279,6 +277,11 @@ var Book = {
 					width : Book.CANVAS_WIDTH + "px"
 				},
 				onComplete : Book.onRightComplete
+			});
+			TweenLite.to(Book.pages[Book.drag.index - 1], 1, {
+				css : {
+					width : Book.CANVAS_WIDTH + "px"
+				}
 			});
 			if (Book.pages[Book.drag.index + 1]) {
 				TweenLite.killTweensOf(Book.pages[Book.drag.index + 1]);
